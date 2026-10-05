@@ -73,6 +73,7 @@
         this.rod = this.el.querySelector('.rod');
         this.line = this.el.querySelector('.line');
         this.bobber = this.el.querySelector('.bobber');
+        this.fish = this.el.querySelector('.fish');
         this.btn = document.getElementById('castBtn');
 
         this.btn.addEventListener('click', () => this.cast());
@@ -112,6 +113,16 @@
       },
 
       reelIn: function () {
+        // ให้ปลาปรากฏที่ปลายสายก่อน แล้วติดกลับมาพร้อมเบ็ด
+        this.fish.setAttribute('visible', 'true');
+        this.fish.setAttribute('animation__fish', {
+          property: 'position',
+          from: '0 -0.28 -1.8',
+          to: '0 -0.28 0',
+          dur: 800,
+          easing: 'easeInQuad'
+        });
+
         this.bobber.setAttribute('animation__bobber', {
           property: 'position',
           from: '0 -0.28 -1.8',
@@ -129,9 +140,10 @@
         });
 
         setTimeout(() => {
+          this.fish.setAttribute('visible', 'false');
           this.casting = false;
           this.btn.textContent = 'ขว้างเบ็ด';
-        }, 850);
+        }, 900);
       }
     });
 
@@ -266,6 +278,14 @@
           height="0.16"
           color="#cccccc">
         </a-cone>
+
+        <!-- ปลา: จะปรากฏตอนดึงเบ็ดกลับ -->
+        <a-entity class="fish" visible="false" position="0 -0.28 -1.8" rotation="0 90 0">
+          <a-sphere position="0 0 0" radius="0.13" scale="1.5 0.65 0.55" color="#e89b3c"></a-sphere>
+          <a-cone position="0.22 0 0" radius-bottom="0.16" radius-top="0" height="0.28" rotation="0 0 -90" color="#e89b3c"></a-cone>
+          <a-sphere position="-0.08 0.06 0.12" radius="0.025" color="#111111"></a-sphere>
+          <a-cone position="-0.02 0.10 0" radius-bottom="0.07" radius-top="0" height="0.12" rotation="0 0 180" color="#d8832c"></a-cone>
+        </a-entity>
 
       </a-entity>
 

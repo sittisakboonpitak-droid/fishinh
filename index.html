@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AR Fishing - Hiro Marker</title>
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <!-- AR.js -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #ui {
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      right: 0;
+      bottom: 24px;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    #castBtn {
+      pointer-events: auto;
+      border: 0;
+      border-radius: 14px;
+      padding: 15px 30px;
+      font-size: 20px;
+      font-weight: bold;
+      color: white;
+      background: #1677ff;
+      box-shadow: 0 5px 18px rgba(0,0,0,.35);
+      cursor: pointer;
+    }
+
+    #castBtn:active {
+      transform: scale(.95);
+    }
+
+    #status {
+      position: fixed;
+      z-index: 9999;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 14px;
+      border-radius: 10px;
+      color: white;
+      background: rgba(0,0,0,.55);
+      font-size: 14px;
+      text-align: center;
+      pointer-events: none;
+    }
+  </style>
+
+  <script>
+    AFRAME.registerComponent('fishing-animation', {
+      init: function () {
+        this.casting = false;
+        this.time = 0;
+
+        this.rod = this.el.querySelector('.rod');
+        this.line = this.el.querySelector('.line');
+        this.bobber = this.el.querySelector('.bobber');
+        this.btn = document.getElementById('castBtn');
+
+        this.btn.addEventListener('click', () => this.cast());
+      },
+
+      cast: function () {
+        if (this.casting) return;
+
+        this.casting = true;
+        this.time = 0;
+        this.btn.textContent = 'กำลังขว้าง...';
+
+        // Animation: เบ็ดพุ่งไปด้านหน้า
+        this.line.setAttribute('animation__line', {
+          property: 'scale',
+          from: '1 1 1',
+          to: '1 1 5',
+          dur: 650,
+          easing: 'easeOutQuad'
+        });
+
+        this.bobber.setAttribute('animation__bobber', {
+          property: 'position',
+          from: '0 -0.28 0',
+          to: '0 -0.28 -1.8',
+          dur: 650,
+          easing: 'easeOutQuad'
+        });
+
+        setTimeout(() => {
+          this.btn.textContent = 'ดึงเบ็ดกลับ';
+        }, 700);
+
+        setTimeout(() => {
+          this.reelIn();
+        }, 1800);
+      },
+
+      reelIn: function () {
+        this.bobber.setAttribute('animation__bobber', {
+          property: 'position',
+          from: '0 -0.28 -1.8',
+          to: '0 -0.28 0',
+          dur: 800,
+          easing: 'easeInQuad'
+        });
+
+        this.line.setAttribute('animation__line', {
+          property: 'scale',
+          from: '1 1 5',
+          to: '1 1 1',
+          dur: 800,
+          easing: 'easeInQuad'
+        });
+
+        setTimeout(() => {
+          this.casting = false;
+          this.btn.textContent = 'ขว้างเบ็ด';
+        }, 850);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const marker = document.querySelector('#hiroMarker');
+      const status = document.querySelector('#status');
+
+      marker.addEventListener('markerFound', () => {
+        status.textContent = 'พบ Hiro Marker ✓';
+        status.style.background = 'rgba(0,140,70,.75)';
+      });
+
+      marker.addEventListener('markerLost', () => {
+        status.textContent = 'กำลังค้นหา Hiro Marker...';
+        status.style.background = 'rgba(0,0,0,.55)';
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div id="status">กำลังค้นหา Hiro Marker...</div>
+
+  <div id="ui">
+    <button id="castBtn">ขว้างเบ็ด</button>
+  </div>
+
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; precision: medium;"
+    arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false;"
+  >
+
+    <a-assets>
+      <!-- ใช้โมเดลเบ็ดแบบ procedural ไม่ต้องดาวน์โหลดไฟล์ 3D เพิ่ม -->
+    </a-assets>
+
+    <a-marker
+      id="hiroMarker"
+      preset="hiro"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+    >
+
+      <!-- กลุ่มเบ็ดตกปลา -->
+      <a-entity id="fishingRod" fishing-animation position="0 0.15 0">
+
+        <!-- ด้ามจับ -->
+        <a-cylinder
+          position="0 -0.25 0"
+          radius="0.055"
+          height="0.5"
+          rotation="0 0 90"
+          color="#5b351c">
+        </a-cylinder>
+
+        <!-- ด้ามสีดำ -->
+        <a-cylinder
+          position="0 -0.25 -0.27"
+          radius="0.075"
+          height="0.25"
+          rotation="0 0 90"
+          color="#222222">
+        </a-cylinder>
+
+        <!-- ตัวคันเบ็ด -->
+        <a-cylinder
+          class="rod"
+          position="0 0.35 -0.15"
+          radius="0.018"
+          height="1.15"
+          rotation="8 0 0"
+          color="#777777">
+        </a-cylinder>
+
+        <!-- ปลายเบ็ด -->
+        <a-sphere
+          position="0 0.9 -0.25"
+          radius="0.035"
+          color="#dddddd">
+        </a-sphere>
+
+        <!-- รอก -->
+        <a-torus
+          position="0 -0.02 -0.02"
+          rotation="90 0 0"
+          radius="0.13"
+          radius-tubular="0.025"
+          color="#aaaaaa">
+        </a-torus>
+
+        <!-- มือหมุนรอก -->
+        <a-cylinder
+          position="0.12 -0.02 -0.02"
+          height="0.23"
+          radius="0.018"
+          rotation="0 0 90"
+          color="#444444">
+        </a-cylinder>
+
+        <a-sphere
+          position="0.24 -0.02 -0.02"
+          radius="0.045"
+          color="#222222">
+        </a-sphere>
+
+        <!-- สายเอ็น -->
+        <a-cylinder
+          class="line"
+          position="0 -0.28 -0.9"
+          radius="0.006"
+          height="1.8"
+          rotation="90 0 0"
+          color="#eeeeee">
+        </a-cylinder>
+
+        <!-- ทุ่น/ตะขอ -->
+        <a-sphere
+          class="bobber"
+          position="0 -0.28 0"
+          radius="0.055"
+          color="#ff3030">
+        </a-sphere>
+
+        <a-cone
+          position="0 -0.36 0"
+          radius-bottom="0.025"
+          radius-top="0.005"
+          height="0.16"
+          color="#cccccc">
+        </a-cone>
+
+      </a-entity>
+
+      <!-- แสง -->
+      <a-light type="ambient" intensity="1.2"></a-light>
+      <a-light type="directional" position="1 2 1" intensity="1"></a-light>
+
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+</body>
+</html>
